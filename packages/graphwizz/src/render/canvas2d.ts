@@ -327,7 +327,9 @@ export class CanvasRenderer implements GraphRenderer {
     for (const i of this.grid.within(w.x, w.y, r + 6)) {
       const dx = m.x[i] - w.x
       const dy = m.y[i] - w.y
-      const rr = Math.max(m.size[i] + 3, 5)
+      // cap the pick radius like the drawn radius so deep-zoom hits land on
+      // the visible disc, not an invisible halo around it
+      const rr = Math.min(24 / this.camera.zoom + 3, Math.max(m.size[i] + 3, 5))
       const d = Math.hypot(dx, dy)
       if (d < rr && d < bestD) {
         bestD = d
@@ -415,6 +417,14 @@ export class CanvasRenderer implements GraphRenderer {
     const hover = this.hoverIdx
     const neighborSet: Set<number> | null = hover !== null ? new Set(m.neighbors(hover)) : null
 
+    // world space: everything below draws in world coordinates, mapped
+    // through the camera (pan/zoom). Labels and the lasso overlay afterwards
+    // switch back to screen space.
+    ctx.save()
+    ctx.translate(width / 2, height / 2)
+    ctx.scale(zoom, zoom)
+    ctx.translate(-this.camera.x, -this.camera.y)
+
     // cluster hulls
     if (this.opts.showHulls && m.clusters && m.order > 2) this.drawHulls(ctx, v0, v1)
 
@@ -424,7 +434,7 @@ export class CanvasRenderer implements GraphRenderer {
     let drawnEdges = 0
     const edgeLimit = 12000
     ctx.strokeStyle = s.edgeColor
-    ctx.lineWidth = Math.max(0.6, Math.min(1.6, worldPerScreen * 1.1))
+    ctx.lineWidth = 1.1 / zoom
     ctx.globalAlpha = 1
     ctx.beginPath()
     const hlEdges: number[][] = []
@@ -458,7 +468,7 @@ export class CanvasRenderer implements GraphRenderer {
     // highlighted edges above the mass
     if (hlEdges.length) {
       ctx.strokeStyle = s.edgeHighlight
-      ctx.lineWidth = Math.max(1.4, worldPerScreen * 2)
+      ctx.lineWidth = 1.8 / zoom
       ctx.beginPath()
       for (const [ax, ay, bx, by] of hlEdges) {
         ctx.moveTo(ax, ay)
@@ -516,8 +526,9 @@ export class CanvasRenderer implements GraphRenderer {
       }
     }
     ctx.globalAlpha = 1
+    ctx.restore()
 
-    // labels with grid collision (semantic zoom)
+    // labels with grid collision (semantic zoom) — screen space again
     this.drawLabels(ctx, v0, v1, zoom, neighborSet)
 
     // lasso overlay
@@ -608,7 +619,7 @@ export class CanvasRenderer implements GraphRenderer {
           const cx = poly.reduce((s2, _v, idx2) => (idx2 % 2 === 0 ? s2 + poly[idx2] : s2), 0) / (poly.length / 2)
           const cy = poly.reduce((s2, _v, idx2) => (idx2 % 2 === 1 ? s2 + poly[idx2] : s2), 0) / (poly.length / 2)
           ctx.fillStyle = withAlpha(color, 0.85)
-          ctx.font = `${Math.max(10, 12 / this.camera.zoom)}px ui-monospace, monospace`
+          ctx.font = `${12 / this.camera.zoom}px ui-monospace, monospace`
           ctx.textAlign = 'center'
           const label = info.labels.length ? info.labels.join(' · ') : `cluster ${c}`
           ctx.fillText(`${label} (${info.size})`, cx, cy)
@@ -625,7 +636,10 @@ export class CanvasRenderer implements GraphRenderer {
     neighborSet: Set<number> | null,
   ): void {
     const m = this.model
-    if (zoom < 0.35) return
+    // deep zoom-out: only hub labels (else the canvas is an anonymous mess);
+    // past ~0.35 everything with a caption becomes label-eligible
+    const hubOnly = zoom < 0.35
+    if (zoom < 0.12) return
     // candidates sorted by priority: hovered/selected > neighbors > degree
     const cands: { i: number; prio: number }[] = []
     for (let i = 0; i < m.order; i++) {
@@ -641,7 +655,9 @@ export class CanvasRenderer implements GraphRenderer {
       cands.push({ i, prio })
     }
     cands.sort((a, b) => b.prio - a.prio)
-    const maxLabels = zoom > 2 ? 320 : zoom > 1 ? 180 : 90
+    // hub-only mode: cap hard so low zooms stay readable
+    const maxLabels = hubOnly ? 40 : zoom > 2 ? 320 : zoom > 1 ? 180 : 90
+    const minHubDegree = hubOnly ? Math.max(4, m.order * 0.02) : 0
     const claimed = new Set<number>()
     const cellPx = 92
     const s = this.opts.style
@@ -653,6 +669,7 @@ export class CanvasRenderer implements GraphRenderer {
     let drawn = 0
     for (const { i } of cands) {
       if (drawn >= maxLabels) break
+      if (hubOnly && m.degree[i] < minHubDegree && this.hoverIdx !== i && !this.selection.has(i)) continue
       const node = m.nodes.get(m.id(i)!)!
       const cap = node.caption ?? ''
       if (!cap) continue
@@ -663,9 +680,11 @@ export class CanvasRenderer implements GraphRenderer {
       const color = this.nodeColor(i)
       ctx.lineWidth = 3
       ctx.strokeStyle = 'rgba(3, 8, 18, 0.9)'
-      ctx.strokeText(cap, sx, sy - m.size[i] * Math.min(zoom, 1.4) - 4)
+      // drawn screen radius (matches the node loop incl. the screen cap)
+      const rScreen = Math.min(24, Math.max(m.size[i] * zoom, 1.6))
+      ctx.strokeText(cap, sx, sy - rScreen - 4)
       ctx.fillStyle = this.hoverIdx === i || this.selection.has(i) ? '#aef1ff' : s.labelColor
-      ctx.fillText(cap, sx, sy - m.size[i] * Math.min(zoom, 1.4) - 4)
+      ctx.fillText(cap, sx, sy - rScreen - 4)
       drawn++
     }
   }

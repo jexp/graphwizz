@@ -100,6 +100,7 @@ async function connect(): Promise<void> {
   try {
     explorer?.destroy()
     explorer = new GraphExplorer({ container: $('canvas-host'), sessionKey: conn.database })
+    ;(window as any).__gw = explorer // debug handle: camera, model, renderer
     wireExplorer()
     // ?debug in the URL: log every request attempt (statement, ms, 429s) to the console
     if (new URLSearchParams(location.search).has('debug')) {

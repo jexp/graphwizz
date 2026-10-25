@@ -13,6 +13,7 @@
     "preview": "npm run preview -w packages/demo"
   },
   "devDependencies": {
+    "playwright": "^1.64.1",
     "typescript": "^5.7.2",
     "vitest": "^3.0.0"
   }
