@@ -48,8 +48,9 @@ Data flow: `Neo4jClient → fetchTopology (procedures + count store + lazy sampl
 | 8 | CypherLite store + Cypher subset + IndexedDB | ✅ done (tests green) |
 | 9 | Explorer orchestrator + public API | ✅ done |
 | 10 | Demo app: connect panel (presets, env-file drag&drop, restore), inspector, filters, cluster legend, search, cypher console, HUD theme | ✅ done |
-| 11 | Tests: 27/27 green (planted-partition Louvain, mini-cypher, model, captions, env parsing) | ✅ done |
-| 12 | Builds green; live smoke: movies 6.7s / stackoverflow 4.8s end-to-end; README | ✅ done |
+| 11 | Tests: 28/28 unit green (planted-partition Louvain, mini-cypher incl. IS NULL, model, captions, env parsing) + live-gated integration test | ✅ done |
+| 12 | Builds green; live smokes across 5 datasets; README with architecture + screenshot | ✅ done |
+| 13 | Browser verification harness (`scripts/ui-check.mjs`, Playwright): camera transform, screen-capped node sizing, hub labels at low zoom — all pixel-verified | ✅ done |
 
 ## Decisions log
 
@@ -65,3 +66,6 @@ Data flow: `Neo4jClient → fetchTopology (procedures + count store + lazy sampl
 - **Bounded probes**: every exploratory query that could plan as a scan (rare-type edge probes, unsampled marginal pairs) carries a per-query abort; edge probes run type-count-descending so the informative types resolve first.
 - **Background enrichment**: exact schema-count marginals resolve after the main topology returns — the view paints first, exact counts pop in later.
 - **Adaptive request pacing** in the client (gap grows on 429, linear decay on success) instead of reactive retry storms against the demo server's rate limiter.
+- **Camera is a real transform.** The Canvas2D renderer draws hulls/edges/nodes inside a `translate(center)·scale(zoom)·translate(-camera)` transform; labels and lasso stay in screen space. Stroke widths and fonts are zoom-normalized so lines stay ~1px at any zoom. (The initial version forgot the transform — grid moved, nodes didn't; caught by the user, now guarded by `scripts/ui-check.mjs`.)
+- **Node sizing = normalized log-degree + screen cap.** Radius maps `log₂(1+degree)` from min→max of the loaded graph into 2.5–13 world units (relative hub-ness stays readable on heavy tails), and the *drawn* disc is clamped to 24 screen px at any zoom (map-pin semantics). Labels/halos/pick-radius follow the capped drawn radius.
+- **Semantic zoom for labels**: full labels above zoom 0.35; hub-only (top 40 by degree + hovered/selected) down to 0.12; none below. Cluster-hull captions only for hulls ≥ 6 members.

@@ -179,12 +179,15 @@ function wireExplorer(): void {
     renderClusterLegend()
     $('status-right').textContent = `${count} clusters · modularity ${modularity?.toFixed(3) ?? '?'}`
   })
-  // stats ticker
-    const model = explorer.model
-    const updateStats = () => {
-      $('stats').textContent = `${model.order} nodes · ${model.sizeRels} rels · ${explorer!.local.rosterCount} captions cached`
-    }
+  // stats ticker — also refreshes for background changes (roster warming,
+  // prefetch) that don't emit model events
+  const model = explorer.model
+  const updateStats = () => {
+    $('stats').textContent = `${model.order} nodes · ${model.sizeRels} rels · ${explorer!.local.rosterCount} captions cached`
+  }
   model.events.on('changed', updateStats)
+  const statsTimer = window.setInterval(updateStats, 2000)
+  window.addEventListener('beforeunload', () => window.clearInterval(statsTimer), { once: true })
   updateStats()
 }
 

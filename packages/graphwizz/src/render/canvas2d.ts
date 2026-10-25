@@ -615,7 +615,8 @@ export class CanvasRenderer implements GraphRenderer {
       ctx.stroke()
       if (m.clusters) {
         const info = m.clusters.find((ci) => ci.id === c)
-        if (info && this.camera.zoom > 0.35) {
+        // label only the larger hulls — small clusters just add noise
+        if (info && info.size >= 6 && this.camera.zoom > 0.35) {
           const cx = poly.reduce((s2, _v, idx2) => (idx2 % 2 === 0 ? s2 + poly[idx2] : s2), 0) / (poly.length / 2)
           const cy = poly.reduce((s2, _v, idx2) => (idx2 % 2 === 1 ? s2 + poly[idx2] : s2), 0) / (poly.length / 2)
           ctx.fillStyle = withAlpha(color, 0.85)

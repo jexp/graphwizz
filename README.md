@@ -4,8 +4,7 @@
 
 graphwizz connects directly to a Neo4j HTTP endpoint, understands a database's topology in seconds (even at 50M+ nodes), stages an explorable subgraph with lazy background enrichment, clusters it locally with Louvain, renders it with pluggable renderers, and caches everything in a local **CypherLite** store that survives reloads and is queryable with a Cypher subset — all wrapped in a dark HUD with schema minimap, cluster hulls and semantic zoom.
 
-<!-- Drop a screenshot at docs/screenshot.png and it will render here. -->
-![graphwizz exploring the StackOverflow demo dataset](docs/screenshot.png)
+![graphwizz exploring the movies demo dataset: labeled node-link view, cluster hulls, schema pane with exact counts, minimap](docs/screenshot.png)
 
 ---
 
@@ -234,12 +233,15 @@ The NVL adapter (`src/adapters/nvl-adapter.ts`) shows the pattern for third-part
 
 ```bash
 npm test                                    # 28 unit tests, no network
+node scripts/ui-check.mjs                   # headless-browser verification (Playwright):
+                                            #   zoom/pan move nodes, captions exist, one canvas
+node scripts/make-screenshot.mjs movies     # regenerate docs/screenshot.png from a live session
 GRAPHWIZZ_LIVE=1 GRAPHWIZZ_DB=ckg \
   npx vitest run tests/integration.live.test.ts   # live integration + timing tables
 node scripts/smoke.mjs ckg                  # built-library end-to-end
 ```
 
-Unit coverage: Louvain on planted partitions (purity + modularity), mini-Cypher parser/evaluator (14 cases), GraphModel merge/visibility/edge arrays, caption inference, env-file parsing.
+Unit coverage: Louvain on planted partitions (purity + modularity), mini-Cypher parser/evaluator (14 cases), GraphModel merge/visibility/edge arrays, caption inference, env-file parsing. `ui-check.mjs` exists because a canvas renderer's camera math can't be validated by typechecks — it asserts real pixel-level behavior and exits non-zero if zoom/pan ever stop moving nodes.
 
 ---
 
