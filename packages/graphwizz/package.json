@@ -1,0 +1,42 @@
+{
+  "name": "graphwizz",
+  "version": "0.1.0",
+  "description": "Interactive Neo4j graph exploration library for the browser: topology-first loading, in-browser clustering, pluggable renderers, lazy detail fetching and a local CypherLite store.",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/graphwizz.js",
+  "module": "./dist/graphwizz.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "default": "./dist/graphwizz.js"
+    },
+    "./cypherlite": {
+      "development": "./src/cypherlite/index.ts",
+      "default": "./dist/cypherlite.js"
+    },
+    "./renderers": {
+      "development": "./src/render/index.ts",
+      "default": "./dist/renderers.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "d3-force": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/d3-force": "^3.0.10",
+    "@types/node": "^26.6.5",
+    "vite": "^6.0.0",
+    "vite-plugin-dts": "^4.3.0"
+  }
+}

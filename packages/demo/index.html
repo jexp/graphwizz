@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>graphwizz — Neo4j exploration HUD</title>
+  <link rel="stylesheet" href="/src/theme.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- connect overlay -->
+    <div id="connect-overlay" class="overlay">
+      <div class="panel connect-panel">
+        <h1><span class="logo-glow">graphwizz</span></h1>
+        <p class="sub">topology-first Neo4j graph exploration</p>
+        <label class="preset-label">demo server presets</label>
+        <select id="preset"></select>
+        <div class="grid2">
+          <label>URI <input id="uri" placeholder="https://demo.neo4jlabs.com:7473" /></label>
+          <label>Database <input id="database" placeholder="movies" /></label>
+          <label>Username <input id="username" placeholder="movies" /></label>
+          <label>Password <input id="password" type="password" placeholder="movies" /></label>
+        </div>
+        <div class="hint">drop a <code>.env</code> file here (<code>NEO4J_URI, NEO4J_USERNAME, NEO4J_PASSWORD, NEO4J_DATABASE</code>)</div>
+        <div class="row">
+          <button id="btn-connect" class="primary">CONNECT</button>
+          <button id="btn-restore" class="ghost">restore last session</button>
+        </div>
+        <div id="connect-status" class="status-line"></div>
+      </div>
+    </div>
+
+    <!-- main HUD -->
+    <div id="hud" class="hidden">
+      <header id="topbar">
+        <div class="brand">graphwizz</div>
+        <div id="db-info" class="db-info"></div>
+        <div class="spacer"></div>
+        <div id="progress" class="progress hidden"><div class="scan"></div><span id="progress-text"></span></div>
+        <div id="stats" class="stats"></div>
+        <button id="btn-menu" class="ghost small">☰</button>
+      </header>
+
+      <aside id="left" class="side-panel">
+        <section class="pane">
+          <h3>schema</h3>
+          <div id="schema-map"></div>
+        </section>
+        <section class="pane">
+          <h3>labels</h3>
+          <div id="label-filters" class="chip-list"></div>
+        </section>
+        <section class="pane">
+          <h3>relationship types</h3>
+          <div id="reltype-filters" class="chip-list"></div>
+        </section>
+        <section class="pane">
+          <h3>clusters</h3>
+          <div id="cluster-legend"></div>
+          <button id="btn-cluster" class="ghost small">re-run louvain</button>
+        </section>
+      </aside>
+
+      <main id="stage">
+        <div id="canvas-host"></div>
+        <div id="minimap-host"></div>
+        <div id="search-bar">
+          <input id="search" placeholder="search captions…" />
+          <div id="search-results"></div>
+        </div>
+        <div id="toolbar">
+          <button id="btn-fit" title="fit (F)">⤢</button>
+          <button id="btn-lasso" title="lasso (L)">◌</button>
+          <button id="btn-renderer" title="switch renderer">2D</button>
+          <button id="btn-color" title="color by label/cluster">◐</button>
+          <button id="btn-shot" title="screenshot">◉</button>
+        </div>
+        <div id="hover-card" class="hidden"></div>
+      </main>
+
+      <aside id="right" class="side-panel">
+        <section class="pane">
+          <h3>inspector</h3>
+          <div id="inspector" class="inspector empty">select a node…</div>
+        </section>
+        <section class="pane">
+          <h3>cypherlite console</h3>
+          <textarea id="cypher-input" rows="3" spellcheck="false">MATCH (n) WHERE n.name IS NOT NULL
+RETURN n LIMIT 5</textarea>
+          <div class="row">
+            <button id="btn-cypher" class="primary small">RUN LOCAL</button>
+            <span class="hint-inline">runs on cached data</span>
+          </div>
+          <div id="cypher-results"></div>
+        </section>
+      </aside>
+
+      <footer id="statusbar">
+        <span id="status-left">idle</span>
+        <span class="spacer"></span>
+        <span id="status-right"></span>
+      </footer>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

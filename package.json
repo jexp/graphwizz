@@ -1,0 +1,19 @@
+{
+  "name": "graphwizz-workspace",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w packages/graphwizz && npm run build -w packages/demo",
+    "test": "npm run test -w packages/graphwizz",
+    "dev": "npm run dev -w packages/demo",
+    "preview": "npm run preview -w packages/demo"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.0"
+  }
+}
